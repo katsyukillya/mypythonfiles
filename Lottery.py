@@ -28,29 +28,29 @@ def main_numbers(gen, lim):
 
 
 def power_ball(extra_lim, str_pr):
-    """ Generating a Power Ball number """
+    """ Generating a Power Ball or Mega Millions Extra number """
     p = random.randrange(1, extra_lim)      # Generate a random number in range from 1 to extra limit set by the lottery
     print("%s Ball = %s" % (str_pr, p))     # Printing the power ball value
     return p
 
 
-def email_results(g_password, title):
+def email_results(title):
     """ Sending email with the results"""
 
-    sender = 'ikatsyuk@gmail.com'
-
-    recipients = ['illya_katsyuk@msn.com']
+    sender = input("\nWhat email account would you like to send email from? ")
+    g_password = input("Please enter the Sender's e-mail password here: ")
+    recipient = input("Which Recipient(s) e-mail(s) would you like to use? ")
+    recipients = [f'{recipient}']
 
     # Create the enclosing (outer) message
     outer = MIMEMultipart()
     outer['Subject'] = title
-#    outer['Subject'] = 'Generated winning numbers'
     outer['To'] = COMMASPACE.join(recipients)
     outer['From'] = sender
     outer.preamble = 'You will not see this in a MIME-aware mail reader.\n'
 
     # List of attachments
-    attachments = ['C:\\Users\\IllyaK\\PycharmProjects\\PyForDev\\External\\test_file.txt']
+    attachments = ['C:\\Users\\<myDirectory>\\PycharmProjects\\PyForDev\\External\\test_file.txt']
 
     # Add the attachments to the message
     for file in attachments:
@@ -108,7 +108,8 @@ def main():
             print("You entered invalid value: '%s'. Please try again" % lottery_type)
             continue
 
-        f = open("test_file.txt", "w+")
+        f = open("test_file.txt", "w+")                         # The file is being written in same directory as the program is.
+                                                                # It is easier to operate that way
         quantity = input("How many tickets to generate? ")      # Getting the number of tickets to generate
         try:
             quantity = int(quantity)                            # Converting the answer into the integer
@@ -126,7 +127,7 @@ def main():
         for z in range(quantity):       # Run a loop with up to asked number of tickets
             generated_list = main_numbers(z, limit_main)            # Call function to generate the main numbers
             extra_ball = power_ball(extra_limit, string_print)      # Call function to generate the Power Ball
-            ball_string = f'{z+1}. extra ball = {extra_ball}'
+            ball_string = f'{z+1}. {string_print} Ball = {extra_ball}'
             list_of_lists.append(generated_list)
             list_of_lists.append(ball_string)
 
@@ -135,9 +136,7 @@ def main():
 
         f.close()
 
-        g_password = input("please enter the Gmail password here: ")
-
-        email_results(g_password, title)
+        email_results(title)
 
 
 if __name__ == '__main__':
