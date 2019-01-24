@@ -6,117 +6,100 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 
-COMMASPACE = ', '
-''' The following FILEPATH is the path to the file with the generated lottery numbers.
-    It is important to provide the fully qualified path with the double-backslashes separating directories
-    For example: FILEPATH = "C:\\Users\\<userName>\\PythonDirectory\\test_file.txt"
-'''
-FILEPATH = "C:\\Users\\<userName>\\PycharmProjects\\PyForDev\\External\\test_file.txt"
 
+class Lottery:
 
-def main_numbers(gen, lim):
-    """ Generating the 5-numbers sequences for the main body
-        of the lottery ticket
-    """
+    def __init__(self):
+        self.COMMASPACE = ', '
+        self.a_list = []
 
-    a_list = []                             # Creating an empty list
-    print(f"\nGenerated numbers {gen+1}")   # Printing line with the round number
-    while len(a_list) < 5:                  # While loop controlling the number of elements in the list
-        a = random.randrange(1, lim)        # Generating a random number in range from 1 to 69
-        if a not in a_list:                 # Checking if the generated number exists already in the list
-            a_list.append(a)                # If the number is not in the list, append it to the list
+    def main_numbers(self, gen, lim):
+        print(f"\nGenerated numbers set #{gen+1}")
+        while len(self.a_list) < 5:
+            a = random.randrange(1, lim)
+            if a not in self.a_list:
+                self.a_list.append(a)
 
-    a_list.sort()                           # Sort the 5-numbers list
-    print(a_list)                           # Print the sorted list
+        self.a_list.sort()
+        print(self.a_list)
 
-    return a_list                           # Returning the sorted list to the main() function
+        return self.a_list
 
+    def extra_ball(self, extra_lim, str_pr):
+        b = random.randrange(1, extra_lim)
+        print("%s Ball = %s" % (str_pr, b))
 
-def power_ball(extra_lim, str_pr):
-    """ Generating a Power Ball or Mega Millions Extra number """
-    p = random.randrange(1, extra_lim)      # Generate a random number in range from 1 to extra limit set by the lottery
-    print("%s Ball = %s" % (str_pr, p))     # Printing the power ball value
-    return p                                # Returning the extra ball to the main() function
+        return b
 
+    def email_results(self, title):
 
-def email_results(title):
-    """ Sending email with the results"""
-    # Asking the user whether or not s/he wants to send an email with the list of generated numbers
-    email_choice = input("Would you like to send an email with the picked numbers? (y/n) ")
-    if email_choice[0].lower() == 'y':      # In case the user choose "y"/"Y"/"Yes"/"yes", proceed to sending email
-        sender = input("\nWhat Sender's email account would you like to use? ")
-        g_password = input("Please enter the Sender's e-mail password here: ")
-        # Could be multiple emails separated with comma
-        recipient = input("Which Recipient e-mail(s) would you like to use? ")
-        recipients = [f'{recipient}']       # Creating a list of email recipients
+        sender = input("\nWhat email address would you like to use as a Sender?\n ")
+        g_pwd = input("Please enter the Sender's e-mail password here: ")
+        recipient = input("Which Recipient's e-mail(s) would you like to use? ")
+        recipients = [f'{recipient}']
 
-        # Create the enclosing (outer) message
         outer = MIMEMultipart()
         outer['Subject'] = title
-        outer['To'] = COMMASPACE.join(recipients)
+        outer['To'] = self.COMMASPACE.join(recipients)
         outer['From'] = sender
-        outer.preamble = 'You will not see this in a MIME-aware mail reader.\n'
+        outer.preamble = 'You will not see this in a MIME-aware mail sender.\n'
 
-        # List of attachments
+        file_path = input("Please enter the path to the text file with the selected numbers: \n")
+        attachments = [file_path]
 
-        attachments = [f'{FILEPATH}']  # Providing the path to the text file containing the currently generated numbers
-
-        # Add the attachments to the message
         for file in attachments:
             try:
                 with open(file, 'rb') as fp:
-                    msg = MIMEBase('application', "octet-stream")
+                    msg = MIMEBase('application', 'octet-stream')
                     msg.set_payload(fp.read())
                 encoders.encode_base64(msg)
                 msg.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file))
                 outer.attach(msg)
+
             except IOError:
                 print("Unable to open one of the attachments. Error: ", sys.exc_info()[0])
                 raise
 
         composed = outer.as_string()
 
-        # Send the email
+        # The entire email setup is for the GMail sender account
+
         try:
             with smtplib.SMTP('smtp.gmail.com', 587) as s:
                 s.ehlo()
                 s.starttls()
                 s.ehlo()
-                s.login(sender, g_password)
+                s.login(sender, g_pwd)
                 s.sendmail(sender, recipients, composed)
                 s.close()
+
             print("Email sent!")
+
         except IOError:
             print("Unable to send the email. Error: ", sys.exc_info()[0])
             raise
-    else:           # If the user choose not to send the email
-        print("An email will not be sent")
 
 
 def main():
-    """ The main code """
+    print("Welcome to the numbers generator for the lottery program!")
+    while True:
 
-    while True:             # Infinite loop. Will run until the user types 'q' as a choice
-        lottery_type = input("""\nWhat type of the lottery would you like to generate tickets for
-                             ([p]ower ball, [m]ega millions or [q]uit? """)
-        # If the user enters a letter 'q' or a word starting with 'q' regardless of the case
-        if lottery_type[0].lower() == 'q': 
-            print("Goodbye!")
-            break       # The program ends
-        
-        # If the user enters a letter 'p' or a word starting with this letter regardless of the case
+        lottery_type = input("\nWhat type of the lottery would you like to generate the tickets for\n"
+                             "([p]ower ball, [m]ega millions or [q]uit? ")
+
+        if lottery_type[0].lower() == 'q':
+            print("Thanks for using this program. Goodbye!")
+            break
+
         elif lottery_type[0].lower() == 'p':
-            # Setting up important variables
-            limit_main = 70     # Quantity of the main choices for the Power Ball ((from 1 to 69)+ 1) = 70
-            extra_limit = 27    # Quantity of Power Ball choices ((from 1 to 26) + 1)   
+            limit_main = 70
+            extra_limit = 27
             string_print = 'Power'
             title = 'Power Ball'
 
-        # If the user enters a letter 'm' or a word starting with this letter regardless of the case
         elif lottery_type[0].lower() == 'm':
-            # Setting up important variables
-            limit_main = 71     # Quantity of the main choices for the Mega Millions ((from 1 to 70)+ 1) = 71
-            extra_limit = 26    # Quantity of Mega Ball choices ((from 1 to 25) + 1)
+            limit_main = 71
+            extra_limit = 26
             string_print = 'Mega'
             title = 'Mega Millions'
 
@@ -124,34 +107,47 @@ def main():
             print("You entered invalid value: '%s'. Please try again" % lottery_type)
             continue
 
-        f = open("test_file.txt", "w+")                         # Open the file for writing
-        quantity = input("How many tickets to generate? ")      # Getting the number of tickets to generate
-        try:
-            quantity = int(quantity)                            # Converting the answer into the integer
+        f = open("generated_lottery_numbers.txt", "w+")
 
-        except ValueError as msg:                               # Error handling
+        quantity = input("How many tickets to generate? ")
+        try:
+            quantity = int(quantity)
+
+        except ValueError as msg:
             print("Please start over because of", msg)
             continue
 
-        title_string = 'Generating %d tickets for %s\r\n' % (quantity, title)
+        title_string = "Generating %d sets of numbers for the %s tickets \r\n" % (quantity, title)
         print()
         print(title_string)
         f.write(title_string)
 
-        list_of_lists = []              # Setting an empty list for collecting the generated numbers
-        for z in range(quantity):       # Run a loop with up to asked number of tickets
-            generated_list = main_numbers(z, limit_main)            # Call function to generate the main numbers
-            extra_ball = power_ball(extra_limit, string_print)      # Call function to generate the Power Ball
-            ball_string = f'{z+1}. {string_print} Ball = {extra_ball}'      # Constructing an appropriate string
-            list_of_lists.append(generated_list)        # Printing the constructed string
-            list_of_lists.append(ball_string)           # Appending the constructed string
+        list_of_lists = []
+
+        for z in range(quantity):
+            my_generated_list = Lottery()
+            generated_list = my_generated_list.main_numbers(z, limit_main)
+            extra_ball = my_generated_list.extra_ball(extra_limit, string_print)
+            ball_string = f'{z+1}. {string_print} Ball = {extra_ball}'
+            list_of_lists.append(generated_list)
+            list_of_lists.append(ball_string)
 
         for item in list_of_lists:
-            f.write("%s\n" % item)          # Writing to the file the generated list of numbers
+            f.write("%s\n" % item)
 
-        f.close()                           # Closing the file
+        f.close()
 
-        email_results(title)
+        send_email = input("\nWould you like to send the generated numbers by email (y / n)? ")
+
+        if send_email[0].lower() == 'y':
+            email = Lottery()
+            email.email_results(title)
+
+        else:
+            print('OK. As you wish, the email will not be sent.\n'
+                  'You may retrieve the generated numbers from the console or by opening the test_file.txt.\n'
+                  'However, please make sure you do that before running the numbers generator program again. \n'
+                  'Otherwise, the numbers will be overwritten\n')
 
 
 if __name__ == '__main__':
